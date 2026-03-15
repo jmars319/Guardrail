@@ -1,0 +1,60 @@
+:root {
+  color: #f5f5ef;
+  background:
+    radial-gradient(circle at top left, rgba(233, 185, 73, 0.2), transparent 36%),
+    linear-gradient(180deg, #10131b 0%, #161b22 100%);
+  font-family: "Avenir Next", "Helvetica Neue", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+.web-shell {
+  min-height: 100vh;
+  padding: 4rem 1.5rem;
+  display: grid;
+  gap: 1.25rem;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.web-card,
+.web-panel {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  background: rgba(12, 14, 18, 0.72);
+  backdrop-filter: blur(14px);
+  padding: 1.5rem;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+}
+
+.eyebrow {
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #f3c76b;
+  font-size: 0.72rem;
+}
+
+.lead {
+  font-size: 1.2rem;
+  line-height: 1.5;
+}
+
+.web-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}

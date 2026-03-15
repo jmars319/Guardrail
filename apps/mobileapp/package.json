@@ -1,0 +1,16 @@
+{
+  "name": "@guardrail/mobileapp",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node ./scripts/dev-placeholder.mjs",
+    "build": "tsc -p tsconfig.json && node ./scripts/check-placeholder.mjs",
+    "lint": "eslint src scripts --ext .ts,.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@guardrail/config": "workspace:*",
+    "@guardrail/ui": "workspace:*"
+  }
+}

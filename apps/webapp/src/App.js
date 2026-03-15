@@ -1,0 +1,6 @@
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { appMetadata } from "@guardrail/config";
+import { guardrailStatement } from "@guardrail/ui";
+export default function App() {
+    return (_jsxs("main", { className: "web-shell", children: [_jsxs("section", { className: "web-card", children: [_jsx("p", { className: "eyebrow", children: "Future Surface" }), _jsx("h1", { children: appMetadata.name }), _jsx("p", { className: "lead", children: "Guardrail is desktop-first. This web app is a placeholder for future activation, not an active product surface." }), _jsx("p", { children: guardrailStatement })] }), _jsxs("section", { className: "web-grid", children: [_jsxs("article", { className: "web-panel", children: [_jsx("h2", { children: "Current Focus" }), _jsx("p", { children: "The local desktop runtime is the primary surface because policy, approvals, filesystem boundaries, and Tool Host enforcement belong close to the machine doing the work." })] }), _jsxs("article", { className: "web-panel", children: [_jsx("h2", { children: "What Comes Later" }), _jsx("p", { children: "A web surface may eventually provide remote visibility or secondary workflows, but it should not weaken the local-first runtime model." })] })] })] }));
+}

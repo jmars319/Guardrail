@@ -1,0 +1,38 @@
+{
+  "name": "@guardrail/desktopapp",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "dev:web": "vite --host 0.0.0.0 --port 1420",
+    "build": "pnpm build:ui && pnpm check:rust",
+    "build:ui": "tsc -p tsconfig.json && vite build",
+    "build:tauri": "tauri build --debug --no-bundle",
+    "check:rust": "cargo check --manifest-path src-tauri/Cargo.toml",
+    "lint": "eslint src --ext .ts,.tsx",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@guardrail/api-contracts": "workspace:*",
+    "@guardrail/config": "workspace:*",
+    "@guardrail/domain": "workspace:*",
+    "@guardrail/policy": "workspace:*",
+    "@guardrail/privacy": "workspace:*",
+    "@guardrail/provider-config": "workspace:*",
+    "@guardrail/runtime-contracts": "workspace:*",
+    "@guardrail/secrets": "workspace:*",
+    "@guardrail/ui": "workspace:*",
+    "@tauri-apps/api": "2.10.1",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.10.1",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.1",
+    "vite": "8.0.0"
+  }
+}

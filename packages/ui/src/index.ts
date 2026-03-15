@@ -1,0 +1,41 @@
+export interface DesktopNavItem {
+  id: string;
+  label: string;
+  description: string;
+}
+
+export const desktopNavigation: DesktopNavItem[] = [
+  {
+    id: "provider-connections",
+    label: "Provider Connections",
+    description: "Configure model providers without bypassing runtime policy."
+  },
+  {
+    id: "projects",
+    label: "Projects",
+    description: "Attach local workspaces to explicit Guardrail profiles."
+  },
+  {
+    id: "guardrail-profiles",
+    label: "Guardrail Profiles",
+    description: "Review deterministic policy defaults and boundary posture."
+  },
+  {
+    id: "sessions",
+    label: "Sessions",
+    description: "Observe runtime state and session status."
+  },
+  {
+    id: "approvals",
+    label: "Approvals",
+    description: "Inspect queued actions before anything sensitive executes."
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    description: "Manage local ports, updates, and environment posture."
+  }
+];
+
+export const guardrailStatement =
+  "Guardrail is local-first and routes agent actions through a controlled Tool Host boundary.";

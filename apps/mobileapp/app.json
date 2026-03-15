@@ -1,0 +1,9 @@
+{
+  "name": "Guardrail Mobile Placeholder",
+  "slug": "guardrail-mobile-placeholder",
+  "version": "0.1.0",
+  "guardrail": {
+    "status": "placeholder",
+    "primarySurface": "desktopapp"
+  }
+}
