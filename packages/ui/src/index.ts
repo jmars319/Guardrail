@@ -26,6 +26,11 @@ export const desktopNavigation: DesktopNavItem[] = [
     description: "Observe runtime state and session status."
   },
   {
+    id: "runtime-diagnostics",
+    label: "Runtime Diagnostics",
+    description: "Run boundary tests and inspect structured denial coaching."
+  },
+  {
     id: "approvals",
     label: "Approvals",
     description: "Inspect queued actions before anything sensitive executes."

@@ -12,7 +12,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@guardrail/provider-config": "workspace:*",
-    "@guardrail/runtime-contracts": "workspace:*"
+    "@guardrail/policy": "workspace:*",
+    "@guardrail/provider-config": "workspace:*"
   }
 }

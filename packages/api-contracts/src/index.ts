@@ -6,12 +6,16 @@ import type {
   SessionSummary
 } from "@guardrail/domain";
 import type {
+  RuntimeBoundarySnapshot,
   ProviderConnection,
-  RuntimeOverview
+  RuntimeOverview,
+  ToolExecutionResponse
 } from "@guardrail/runtime-contracts";
 
 export interface RuntimeQueryMap {
   "runtime.getOverview": RuntimeOverview;
+  "runtime.getBoundarySnapshot": RuntimeBoundarySnapshot;
+  "runtime.runToolRequest": ToolExecutionResponse;
   "providers.list": ProviderConnection[];
   "projects.list": ProjectSummary[];
   "profiles.list": GuardrailProfileSummary[];

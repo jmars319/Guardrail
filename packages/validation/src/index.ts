@@ -1,5 +1,5 @@
+import type { GuardrailPolicy } from "@guardrail/policy";
 import type { ProviderDefinition } from "@guardrail/provider-config";
-import type { ToolHostPolicySnapshot } from "@guardrail/runtime-contracts";
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
@@ -21,20 +21,24 @@ export function validateProviderDefinition(
   return errors;
 }
 
-export function validatePolicySnapshot(
-  policy: ToolHostPolicySnapshot
+export function validateGuardrailPolicy(
+  policy: GuardrailPolicy
 ): string[] {
   const errors: string[] = [];
 
-  if (policy.mode !== "deny-by-default") {
-    errors.push("policy mode must remain deny-by-default");
+  if (policy.projectRoots.length === 0) {
+    errors.push("policy must declare at least one project root");
   }
 
-  if (!policy.directExecutionForbidden) {
-    errors.push("direct tool execution must remain forbidden");
+  if (policy.allowedReadRoots.length === 0) {
+    errors.push("policy must declare at least one allowed read root");
   }
 
-  if (policy.networkToolsEnabled) {
+  if (policy.allowedWriteRoots.length === 0) {
+    errors.push("policy must declare at least one allowed write root");
+  }
+
+  if (policy.networkEnabled) {
     errors.push("network-capable tooling must stay disabled by default");
   }
 

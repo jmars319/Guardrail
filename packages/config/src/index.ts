@@ -1,4 +1,4 @@
-import { defaultPolicySnapshot } from "@guardrail/policy";
+import { defaultGuardrailPolicy } from "@guardrail/policy";
 import { privacyDefaults } from "@guardrail/privacy";
 import { providerCatalog } from "@guardrail/provider-config";
 
@@ -17,7 +17,7 @@ export const defaultPorts = {
 } as const;
 
 export const scaffoldDefaults = {
-  policy: defaultPolicySnapshot,
+  policy: defaultGuardrailPolicy,
   privacy: privacyDefaults,
   providers: providerCatalog
 } as const;

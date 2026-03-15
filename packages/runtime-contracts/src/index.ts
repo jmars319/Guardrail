@@ -1,34 +1,82 @@
+import type { GuardrailPolicy } from "@guardrail/policy";
 import type { RuntimeSurface } from "@guardrail/shared-types";
 
-export type ToolCapability =
-  | "filesystem.read"
-  | "filesystem.write"
-  | "process.spawn"
-  | "network.http"
-  | "clipboard.read";
+export type ToolActionKind =
+  | "read-file"
+  | "write-file"
+  | "shell-command"
+  | "network-request";
 
-export type ToolHostDecision = "allow" | "deny" | "require-approval";
+export type DenialRiskCategory =
+  | "filesystem"
+  | "secrets"
+  | "shell"
+  | "network"
+  | "protected-path";
 
-export interface ToolCallEnvelope {
+export interface ToolRequestBase {
   id: string;
-  actor: "agent";
-  toolName: string;
-  capability: ToolCapability;
   surface: RuntimeSurface;
   projectId: string;
   requestedAt: string;
 }
 
-export interface ToolHostPolicySnapshot {
-  mode: "deny-by-default";
-  directExecutionForbidden: true;
-  deterministicEvaluation: true;
-  networkToolsEnabled: false;
+export interface ReadFileRequest extends ToolRequestBase {
+  kind: "read-file";
+  path: string;
 }
 
-export interface ToolHostDecisionResult {
-  decision: ToolHostDecision;
+export interface WriteFileRequest extends ToolRequestBase {
+  kind: "write-file";
+  path: string;
+  contents: string;
+}
+
+export interface ShellCommandRequest extends ToolRequestBase {
+  kind: "shell-command";
+  command: string;
+  workingDirectory?: string;
+}
+
+export interface NetworkRequestStub extends ToolRequestBase {
+  kind: "network-request";
+  method: "GET" | "POST";
+  url: string;
+}
+
+export type ToolRequest =
+  | ReadFileRequest
+  | WriteFileRequest
+  | ShellCommandRequest
+  | NetworkRequestStub;
+
+export interface ToolAllowedResponse {
+  status: "allowed";
+  requestId: string;
+  actionKind: ToolActionKind;
+  summary: string;
+  outputPreview?: string;
+}
+
+export interface ToolDeniedResponse {
+  status: "denied";
+  requestId: string;
+  actionKind: ToolActionKind;
   reason: string;
+  riskCategory: DenialRiskCategory;
+  userInstructions: string;
+  checklist: string[];
+  policyRule: string;
+  targetSummary: string;
+}
+
+export type ToolExecutionResponse = ToolAllowedResponse | ToolDeniedResponse;
+
+export interface AuditLogEntry {
+  timestampMs: number;
+  requestKind: ToolActionKind;
+  targetSummary: string;
+  result: ToolExecutionResponse["status"];
 }
 
 export interface RuntimeOverview {
@@ -38,6 +86,15 @@ export interface RuntimeOverview {
   toolHostBoundary: "required";
   policyMode: "deterministic-deny-by-default";
   networkToolingEnabled: false;
+  loadedPolicySource: string;
+  auditEntryCount: number;
+}
+
+export interface RuntimeBoundarySnapshot {
+  loadedPolicySource: string;
+  policy: GuardrailPolicy;
+  sampleRequests: ToolRequest[];
+  auditEntries: AuditLogEntry[];
 }
 
 export interface ProviderConnection {

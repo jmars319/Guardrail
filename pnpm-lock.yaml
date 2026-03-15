@@ -143,11 +143,7 @@ importers:
         specifier: workspace:*
         version: link:../shared-types
 
-  packages/policy:
-    dependencies:
-      '@guardrail/runtime-contracts':
-        specifier: workspace:*
-        version: link:../runtime-contracts
+  packages/policy: {}
 
   packages/privacy: {}
 
@@ -155,6 +151,9 @@ importers:
 
   packages/runtime-contracts:
     dependencies:
+      '@guardrail/policy':
+        specifier: workspace:*
+        version: link:../policy
       '@guardrail/shared-types':
         specifier: workspace:*
         version: link:../shared-types
@@ -167,12 +166,12 @@ importers:
 
   packages/validation:
     dependencies:
+      '@guardrail/policy':
+        specifier: workspace:*
+        version: link:../policy
       '@guardrail/provider-config':
         specifier: workspace:*
         version: link:../provider-config
-      '@guardrail/runtime-contracts':
-        specifier: workspace:*
-        version: link:../runtime-contracts
 
 packages:
 

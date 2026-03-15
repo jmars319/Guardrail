@@ -12,6 +12,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@guardrail/policy": "workspace:*",
     "@guardrail/shared-types": "workspace:*"
   }
 }

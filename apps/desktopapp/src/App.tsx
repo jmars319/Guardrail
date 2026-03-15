@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { appMetadata, defaultPorts } from "@guardrail/config";
+import { appMetadata, defaultPorts, scaffoldDefaults } from "@guardrail/config";
 import {
   seededApprovals,
   seededProfiles,
@@ -9,15 +9,61 @@ import {
   seededProviders,
   seededSessions
 } from "@guardrail/domain";
-import {
-  defaultPolicySnapshot,
-  evaluateToolRequest
-} from "@guardrail/policy";
 import { privacyDefaults } from "@guardrail/privacy";
 import { providerCatalog } from "@guardrail/provider-config";
-import type { RuntimeOverview } from "@guardrail/runtime-contracts";
+import type {
+  RuntimeBoundarySnapshot,
+  RuntimeOverview,
+  ToolDeniedResponse,
+  ToolExecutionResponse,
+  ToolRequest
+} from "@guardrail/runtime-contracts";
 import { secretPatternCatalog } from "@guardrail/secrets";
 import { desktopNavigation, guardrailStatement } from "@guardrail/ui";
+
+const fallbackSampleRequests: ToolRequest[] = [
+  {
+    id: "fallback-read-readme",
+    kind: "read-file",
+    path: "README.md",
+    projectId: "guardrail-desktopapp",
+    requestedAt: "0",
+    surface: "desktop"
+  },
+  {
+    id: "fallback-read-env",
+    kind: "read-file",
+    path: ".env",
+    projectId: "guardrail-desktopapp",
+    requestedAt: "0",
+    surface: "desktop"
+  },
+  {
+    id: "fallback-read-ssh",
+    kind: "read-file",
+    path: "~/.ssh/id_ed25519",
+    projectId: "guardrail-desktopapp",
+    requestedAt: "0",
+    surface: "desktop"
+  },
+  {
+    id: "fallback-shell",
+    kind: "shell-command",
+    command: "rm -rf /tmp/guardrail-test",
+    projectId: "guardrail-desktopapp",
+    requestedAt: "0",
+    surface: "desktop"
+  },
+  {
+    id: "fallback-network",
+    kind: "network-request",
+    method: "GET",
+    projectId: "guardrail-desktopapp",
+    requestedAt: "0",
+    surface: "desktop",
+    url: "https://api.openai.com/v1/models"
+  }
+];
 
 const fallbackOverview: RuntimeOverview = {
   productName: appMetadata.name,
@@ -25,41 +71,55 @@ const fallbackOverview: RuntimeOverview = {
   runtimeShape: "headless-service",
   toolHostBoundary: "required",
   policyMode: "deterministic-deny-by-default",
-  networkToolingEnabled: false
+  networkToolingEnabled: false,
+  loadedPolicySource: "fallback-ui-state",
+  auditEntryCount: 0
 };
 
-const sampleDecision = evaluateToolRequest({
-  id: "sample-network-request",
-  actor: "agent",
-  toolName: "fetch",
-  capability: "network.http",
-  surface: "desktop",
-  projectId: "project-agent-lab",
-  requestedAt: "2026-03-15T12:00:00.000Z"
-});
+const fallbackBoundarySnapshot: RuntimeBoundarySnapshot = {
+  loadedPolicySource: "fallback-ui-state",
+  policy: scaffoldDefaults.policy,
+  sampleRequests: fallbackSampleRequests,
+  auditEntries: []
+};
 
 export default function App() {
   const [overview, setOverview] = useState<RuntimeOverview>(fallbackOverview);
+  const [boundarySnapshot, setBoundarySnapshot] = useState<RuntimeBoundarySnapshot>(
+    fallbackBoundarySnapshot
+  );
   const [runtimeSource, setRuntimeSource] = useState<"rust" | "fallback">(
     "fallback"
   );
   const [activeSection, setActiveSection] = useState(desktopNavigation[0].id);
+  const [selectedRequestId, setSelectedRequestId] = useState(
+    fallbackBoundarySnapshot.sampleRequests[0]?.id ?? ""
+  );
+  const [lastResult, setLastResult] = useState<ToolExecutionResponse | null>(null);
+  const [requestRunning, setRequestRunning] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
-    invoke<RuntimeOverview>("get_runtime_overview")
-      .then((payload) => {
+    Promise.all([
+      invoke<RuntimeOverview>("get_runtime_overview"),
+      invoke<RuntimeBoundarySnapshot>("get_runtime_boundary_snapshot")
+    ])
+      .then(([runtimeOverview, snapshot]) => {
         if (cancelled) {
           return;
         }
 
-        setOverview(payload);
+        setOverview(runtimeOverview);
+        setBoundarySnapshot(snapshot);
+        setSelectedRequestId(snapshot.sampleRequests[0]?.id ?? "");
         setRuntimeSource("rust");
       })
       .catch(() => {
         if (!cancelled) {
           setOverview(fallbackOverview);
+          setBoundarySnapshot(fallbackBoundarySnapshot);
+          setSelectedRequestId(fallbackBoundarySnapshot.sampleRequests[0]?.id ?? "");
           setRuntimeSource("fallback");
         }
       });
@@ -68,6 +128,35 @@ export default function App() {
       cancelled = true;
     };
   }, []);
+
+  const selectedRequest =
+    boundarySnapshot.sampleRequests.find((request) => request.id === selectedRequestId) ??
+    boundarySnapshot.sampleRequests[0] ??
+    null;
+  const auditEntries = [...boundarySnapshot.auditEntries].slice(-5).reverse();
+
+  async function runRequest(request: ToolRequest) {
+    if (runtimeSource !== "rust") {
+      return;
+    }
+
+    setRequestRunning(true);
+    setSelectedRequestId(request.id);
+
+    try {
+      const [result, runtimeOverview, snapshot] = await Promise.all([
+        invoke<ToolExecutionResponse>("run_tool_request", { request }),
+        invoke<RuntimeOverview>("get_runtime_overview"),
+        invoke<RuntimeBoundarySnapshot>("get_runtime_boundary_snapshot")
+      ]);
+
+      setLastResult(result);
+      setOverview(runtimeOverview);
+      setBoundarySnapshot(snapshot);
+    } finally {
+      setRequestRunning(false);
+    }
+  }
 
   return (
     <div className="desktop-shell">
@@ -99,9 +188,9 @@ export default function App() {
             <p className="eyebrow">Runtime Boundary</p>
             <h2>Local desktop shell, headless Rust runtime, explicit Tool Host</h2>
             <p className="hero-copy">
-              Guardrail keeps agent execution behind controlled boundaries.
-              Direct tool execution is forbidden, policy is deterministic, and
-              network-capable tooling starts disabled.
+              Guardrail now loads a real policy, evaluates tool requests through
+              the Tool Host, denies unsafe operations deterministically, and
+              returns structured coaching instead of acting unsafely.
             </p>
           </div>
 
@@ -120,6 +209,16 @@ export default function App() {
               label="Network tooling"
               value={overview.networkToolingEnabled ? "enabled" : "disabled"}
               tone="warning"
+            />
+            <StatusCard
+              label="Policy source"
+              value={overview.loadedPolicySource}
+              tone="neutral"
+            />
+            <StatusCard
+              label="Audit entries"
+              value={String(overview.auditEntryCount)}
+              tone="neutral"
             />
             <StatusCard
               label="Runtime source"
@@ -176,7 +275,7 @@ export default function App() {
             id="guardrail-profiles"
             activeSection={activeSection}
             title="Guardrail Profiles"
-            subtitle="Profiles expose policy posture in plain language."
+            subtitle="Profiles expose concrete boundary posture instead of prompt-only safety."
           >
             {seededProfiles.map((profile) => (
               <article key={profile.id} className="list-row">
@@ -189,8 +288,13 @@ export default function App() {
             ))}
 
             <div className="summary-block">
-              <span>Direct execution forbidden</span>
-              <strong>{String(defaultPolicySnapshot.directExecutionForbidden)}</strong>
+              <span>Blocked path patterns</span>
+              <strong>{boundarySnapshot.policy.deniedPaths.join(", ")}</strong>
+            </div>
+
+            <div className="summary-block">
+              <span>Protected paths</span>
+              <strong>{boundarySnapshot.policy.protectedPaths.join(", ")}</strong>
             </div>
           </Panel>
 
@@ -218,10 +322,123 @@ export default function App() {
           </Panel>
 
           <Panel
+            id="runtime-diagnostics"
+            activeSection={activeSection}
+            title="Runtime Diagnostics"
+            subtitle="Developer-facing boundary test surface backed by the real Tool Host."
+          >
+            <div className="diagnostic-stack">
+              <div className="summary-block">
+                <span>Loaded project roots</span>
+                <strong>{boundarySnapshot.policy.projectRoots.join(", ")}</strong>
+              </div>
+
+              <div className="summary-block">
+                <span>Network enabled</span>
+                <strong>{String(boundarySnapshot.policy.networkEnabled)}</strong>
+              </div>
+
+              <div className="request-actions">
+                {boundarySnapshot.sampleRequests.map((request) => (
+                  <button
+                    key={request.id}
+                    className={
+                      request.id === selectedRequestId
+                        ? "request-button active"
+                        : "request-button"
+                    }
+                    disabled={runtimeSource !== "rust" || requestRunning}
+                    onClick={() => void runRequest(request)}
+                    type="button"
+                  >
+                    <span>{describeRequest(request)}</span>
+                    <small>{describeTarget(request)}</small>
+                  </button>
+                ))}
+              </div>
+
+              {runtimeSource !== "rust" ? (
+                <p className="diagnostic-note">
+                  Runtime diagnostics require the Tauri runtime. Launch via{" "}
+                  <code>pnpm dev:desktop</code> to execute the real boundary.
+                </p>
+              ) : null}
+
+              {selectedRequest ? (
+                <div className="summary-block">
+                  <span>Selected request</span>
+                  <strong>{describeRequest(selectedRequest)}</strong>
+                </div>
+              ) : null}
+
+              {lastResult ? (
+                isDenied(lastResult) ? (
+                  <article className="decision-card denied">
+                    <p className="eyebrow">Denied</p>
+                    <h3>{lastResult.reason}</h3>
+                    <p>{lastResult.userInstructions}</p>
+                    <div className="result-meta">
+                      <span>Risk: {lastResult.riskCategory}</span>
+                      <span>Rule: {lastResult.policyRule}</span>
+                    </div>
+                    <p className="decision-target">
+                      Target: <code>{lastResult.targetSummary}</code>
+                    </p>
+                    <ul className="checklist">
+                      {lastResult.checklist.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </article>
+                ) : (
+                  <article className="decision-card allowed">
+                    <p className="eyebrow">Allowed</p>
+                    <h3>{lastResult.summary}</h3>
+                    <p>
+                      This request was allowed because it stayed inside trusted
+                      scope and did not cross a blocked capability boundary.
+                    </p>
+                    {lastResult.outputPreview ? (
+                      <pre className="preview-block">{lastResult.outputPreview}</pre>
+                    ) : null}
+                  </article>
+                )
+              ) : (
+                <p className="diagnostic-note">
+                  Run one of the sample requests above to see a real allow or
+                  deny payload from the Tool Host.
+                </p>
+              )}
+
+              <div className="audit-list">
+                {auditEntries.length > 0 ? (
+                  auditEntries.map((entry) => (
+                    <article key={`${entry.timestampMs}-${entry.targetSummary}`} className="audit-entry">
+                      <div>
+                        <strong>{entry.requestKind}</strong>
+                        <p>{entry.targetSummary}</p>
+                      </div>
+                      <div className="audit-meta">
+                        <span>{entry.result}</span>
+                        <small>{formatTimestamp(entry.timestampMs)}</small>
+                      </div>
+                    </article>
+                  ))
+                ) : (
+                  <p className="diagnostic-note">
+                    Audit entries appear here after a request passes through the
+                    Tool Host.
+                  </p>
+                )}
+              </div>
+            </div>
+          </Panel>
+
+          <Panel
             id="approvals"
             activeSection={activeSection}
             title="Approvals"
-            subtitle="Sensitive actions queue before execution. No silent bypass path exists."
+            subtitle="Approval flow is reserved for later. Protected targets are denied explicitly for now."
           >
             {seededApprovals.map((approval) => (
               <article key={approval.id} className="list-row">
@@ -234,8 +451,8 @@ export default function App() {
             ))}
 
             <div className="summary-block">
-              <span>Sample Tool Host decision</span>
-              <strong>{sampleDecision.reason}</strong>
+              <span>Current protected paths</span>
+              <strong>{boundarySnapshot.policy.protectedPaths.join(", ")}</strong>
             </div>
           </Panel>
 
@@ -262,6 +479,41 @@ export default function App() {
       </main>
     </div>
   );
+}
+
+function describeRequest(request: ToolRequest) {
+  switch (request.kind) {
+    case "read-file":
+      return "Read file";
+    case "write-file":
+      return "Write file";
+    case "shell-command":
+      return "Shell command";
+    case "network-request":
+      return "Network request";
+  }
+}
+
+function describeTarget(request: ToolRequest) {
+  switch (request.kind) {
+    case "read-file":
+    case "write-file":
+      return request.path;
+    case "shell-command":
+      return request.command;
+    case "network-request":
+      return `${request.method} ${request.url}`;
+  }
+}
+
+function formatTimestamp(timestampMs: number) {
+  return new Date(timestampMs).toLocaleString();
+}
+
+function isDenied(
+  response: ToolExecutionResponse
+): response is ToolDeniedResponse {
+  return response.status === "denied";
 }
 
 interface StatusCardProps {

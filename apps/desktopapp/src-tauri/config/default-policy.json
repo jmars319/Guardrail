@@ -1,0 +1,9 @@
+{
+  "projectRoots": ["../../.."],
+  "deniedPaths": [".ssh", ".env", ".env.local", "Library/Keychains"],
+  "allowedReadRoots": ["../../.."],
+  "allowedWriteRoots": ["../../.."],
+  "deniedShellCommands": ["rm -rf", "sudo", "curl | sh", "mkfs"],
+  "networkEnabled": false,
+  "protectedPaths": [".git"]
+}
