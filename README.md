@@ -1,6 +1,6 @@
-# Guardrail by JAMARQ
+# tenra Guardrail
 
-Guardrail is a local-first, desktop-first application for running AI agents inside hard runtime boundaries. The desktop shell wraps a headless Rust service that routes all agent actions through a Tool Host instead of letting models execute tools directly.
+tenra Guardrail is a local-first, desktop-first application for running AI agents inside hard runtime boundaries. The desktop shell wraps a headless Rust service that routes all agent actions through a Tool Host instead of letting models execute tools directly.
 
 This repository is intentionally not a generic SaaS starter. The v0 scaffold favors a stable desktop product surface, explicit workspace contracts, and future-proof structure for policy enforcement, approvals, auditability, and provider configuration.
 
@@ -32,14 +32,14 @@ The monorepo uses `pnpm` workspaces:
 - `packages/privacy`: privacy defaults and audit redaction rules.
 - `packages/secrets`: placeholder secret-detection descriptors and redaction helpers.
 - `packages/validation`: small runtime validation helpers.
-- `packages/ui`: shared navigation and Guardrail product copy.
+- `packages/ui`: shared navigation and tenra Guardrail product copy.
 - `packages/config`: scaffold-level configuration defaults.
 - `scripts`: bootstrap, health, dev, and verification entrypoints.
 - `docs`: repo map, developer guide, and stability checklist.
 
 ## Why desktop-first and local-first
 
-Guardrail’s initial job is to constrain what an agent can see and do on a local machine. That pushes the product toward a desktop wrapper with a Rust runtime rather than a browser-first or cloud-first control plane. The local machine is where filesystem, process, approval, and secrets boundaries must be enforced.
+tenra Guardrail’s initial job is to constrain what an agent can see and do on a local machine. That pushes the product toward a desktop wrapper with a Rust runtime rather than a browser-first or cloud-first control plane. The local machine is where filesystem, process, approval, and secrets boundaries must be enforced.
 
 Web and mobile surfaces may exist later, but they are intentionally inactive in v0 because the policy and Tool Host spine matters more than multi-surface breadth.
 
@@ -61,4 +61,4 @@ Web and mobile surfaces may exist later, but they are intentionally inactive in 
 - Active now: `apps/desktopapp`.
 - Placeholder only: `apps/webapp`, `apps/mobileapp`.
 
-The placeholder apps exist so future activation has a stable home, not because Guardrail is trying to be everything on day one.
+The placeholder apps exist so future activation has a stable home, not because tenra Guardrail is trying to be everything on day one.

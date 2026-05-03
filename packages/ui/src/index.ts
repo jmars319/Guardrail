@@ -13,11 +13,11 @@ export const desktopNavigation: DesktopNavItem[] = [
   {
     id: "projects",
     label: "Projects",
-    description: "Attach local workspaces to explicit Guardrail profiles."
+    description: "Attach local workspaces to explicit tenra Guardrail profiles."
   },
   {
     id: "guardrail-profiles",
-    label: "Guardrail Profiles",
+    label: "tenra Guardrail Profiles",
     description: "Review deterministic policy defaults and boundary posture."
   },
   {
@@ -43,4 +43,4 @@ export const desktopNavigation: DesktopNavItem[] = [
 ];
 
 export const guardrailStatement =
-  "Guardrail is local-first and routes agent actions through a controlled Tool Host boundary.";
+  "tenra Guardrail is local-first and routes agent actions through a controlled Tool Host boundary.";

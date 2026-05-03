@@ -4,6 +4,6 @@ set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_common.sh"
 
-section "Starting Guardrail web placeholder"
+section "Starting tenra Guardrail web placeholder"
 cd "$REPO_ROOT"
 run pnpm --filter @guardrail/webapp dev

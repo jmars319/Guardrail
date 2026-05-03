@@ -4,6 +4,6 @@ set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_common.sh"
 
-section "Starting Guardrail desktop app"
+section "Starting tenra Guardrail desktop app"
 cd "$REPO_ROOT"
 run pnpm --filter @guardrail/desktopapp dev

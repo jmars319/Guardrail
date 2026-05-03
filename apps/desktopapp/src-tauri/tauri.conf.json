@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Guardrail by JAMARQ",
+  "productName": "tenra Guardrail",
   "version": "0.1.0",
-  "identifier": "com.jamarq.guardrail",
+  "identifier": "co.tenra.guardrail",
   "build": {
     "beforeDevCommand": "pnpm dev:web",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Guardrail by JAMARQ",
+        "title": "tenra Guardrail",
         "width": 1440,
         "height": 960,
         "minWidth": 1120,

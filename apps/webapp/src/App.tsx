@@ -8,7 +8,7 @@ export default function App() {
         <p className="eyebrow">Future Surface</p>
         <h1>{appMetadata.name}</h1>
         <p className="lead">
-          Guardrail is desktop-first. This web app is a placeholder for future
+          tenra Guardrail is desktop-first. This web app is a placeholder for future
           activation, not an active product surface.
         </p>
         <p>{guardrailStatement}</p>

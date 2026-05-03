@@ -167,7 +167,7 @@ export default function App() {
           <p>{guardrailStatement}</p>
         </div>
 
-        <nav className="nav-list" aria-label="Guardrail sections">
+        <nav className="nav-list" aria-label="tenra Guardrail sections">
           {desktopNavigation.map((item) => (
             <button
               key={item.id}
@@ -188,7 +188,7 @@ export default function App() {
             <p className="eyebrow">Runtime Boundary</p>
             <h2>Local desktop shell, headless Rust runtime, explicit Tool Host</h2>
             <p className="hero-copy">
-              Guardrail now loads a real policy, evaluates tool requests through
+              tenra Guardrail now loads a real policy, evaluates tool requests through
               the Tool Host, denies unsafe operations deterministically, and
               returns structured coaching instead of acting unsafely.
             </p>
@@ -274,7 +274,7 @@ export default function App() {
           <Panel
             id="guardrail-profiles"
             activeSection={activeSection}
-            title="Guardrail Profiles"
+            title="tenra Guardrail Profiles"
             subtitle="Profiles expose concrete boundary posture instead of prompt-only safety."
           >
             {seededProfiles.map((profile) => (

@@ -3,7 +3,7 @@ import { privacyDefaults } from "@guardrail/privacy";
 import { providerCatalog } from "@guardrail/provider-config";
 
 export const appMetadata = {
-  name: "Guardrail by JAMARQ",
+  name: "tenra Guardrail",
   repository: "Guardrail",
   localFirst: true,
   desktopFirst: true,
