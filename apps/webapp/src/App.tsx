@@ -5,11 +5,10 @@ export default function App() {
   return (
     <main className="web-shell">
       <section className="web-card">
-        <p className="eyebrow">Future Surface</p>
+        <p className="eyebrow">Web channel</p>
         <h1>{appMetadata.name}</h1>
         <p className="lead">
-          tenra Guardrail is desktop-first. This web app is a placeholder for future
-          activation, not an active product surface.
+          tenra Guardrail is desktop-first. The web channel is reserved for remote visibility and secondary review flows.
         </p>
         <p>{guardrailStatement}</p>
       </section>
@@ -27,8 +26,7 @@ export default function App() {
         <article className="web-panel">
           <h2>What Comes Later</h2>
           <p>
-            A web surface may eventually provide remote visibility or secondary
-            workflows, but it should not weaken the local-first runtime model.
+            Web workflows can add remote visibility while preserving the local-first runtime model.
           </p>
         </article>
       </section>
