@@ -8,7 +8,7 @@
     "dev:web": "vite --host 0.0.0.0 --port 1420",
     "build": "pnpm build:ui && pnpm check:rust",
     "build:ui": "tsc -p tsconfig.json && vite build",
-    "build:tauri": "tauri build --debug --no-bundle",
+    "build:tauri": "tauri build --bundles app",
     "check:rust": "cargo check --manifest-path src-tauri/Cargo.toml",
     "lint": "eslint src --ext .ts,.tsx",
     "typecheck": "tsc -p tsconfig.json --noEmit",
