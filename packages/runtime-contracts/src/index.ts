@@ -7,12 +7,45 @@ export type ToolActionKind =
   | "shell-command"
   | "network-request";
 
+export type GuardrailClientApp =
+  | "align"
+  | "assembly"
+  | "derive"
+  | "facet"
+  | "ledger"
+  | "partition"
+  | "proxy"
+  | "registry"
+  | "scout"
+  | "sentinel"
+  | "vicina"
+  | "vaexcore"
+  | "unknown";
+
+export type GuardrailServiceActionKind =
+  | ToolActionKind
+  | "generate-document"
+  | "send-email"
+  | "import-records"
+  | "post-ledger-entry"
+  | "sync-provider-state"
+  | "create-market-brief";
+
+export type GuardrailDecisionStatus = "allowed" | "denied" | "needs-review";
+
 export type DenialRiskCategory =
   | "filesystem"
   | "secrets"
   | "shell"
   | "network"
   | "protected-path";
+
+export type ResourceRiskCategory =
+  | DenialRiskCategory
+  | "money"
+  | "customer-data"
+  | "external-message"
+  | "provider-write";
 
 export interface ToolRequestBase {
   id: string;
@@ -49,6 +82,47 @@ export type ToolRequest =
   | WriteFileRequest
   | ShellCommandRequest
   | NetworkRequestStub;
+
+export interface GuardrailResourcePointer {
+  kind: "customer" | "asset" | "rental" | "document" | "provider-listing" | "ledger-entry" | "file" | "unknown";
+  app: GuardrailClientApp;
+  externalId?: string;
+  summary: string;
+}
+
+export interface GuardrailServiceRequest {
+  id: string;
+  clientApp: GuardrailClientApp;
+  surface: RuntimeSurface;
+  requestedAt: string;
+  actionKind: GuardrailServiceActionKind;
+  target: GuardrailResourcePointer;
+  purpose: string;
+  proposedChanges: string[];
+  requiresNetwork: boolean;
+  writesLocalData: boolean;
+  sendsExternalMessage: boolean;
+  riskCategories: ResourceRiskCategory[];
+  operatorNote?: string;
+}
+
+export interface GuardrailServiceDecision {
+  requestId: string;
+  status: GuardrailDecisionStatus;
+  reason: string;
+  checklist: string[];
+  policyRule?: string;
+  riskCategories: ResourceRiskCategory[];
+}
+
+export interface GuardrailServiceBoundary {
+  productName: string;
+  protocol: "local-ipc" | "localhost-http";
+  defaultDecision: "needs-review";
+  supportedClients: GuardrailClientApp[];
+  supportedActions: GuardrailServiceActionKind[];
+  auditRequired: true;
+}
 
 export interface ToolAllowedResponse {
   status: "allowed";
@@ -88,6 +162,15 @@ export interface RuntimeOverview {
   networkToolingEnabled: false;
   loadedPolicySource: string;
   auditEntryCount: number;
+}
+
+export interface EvaluateServiceActionRequest {
+  request: GuardrailServiceRequest;
+}
+
+export interface EvaluateServiceActionResponse {
+  decision: GuardrailServiceDecision;
+  auditEntry: AuditLogEntry;
 }
 
 export interface RuntimeBoundarySnapshot {
