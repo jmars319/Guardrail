@@ -65,6 +65,52 @@ const fallbackSampleRequests: ToolRequest[] = [
   }
 ];
 
+const suiteClientNavigation = [
+  ...desktopNavigation,
+  {
+    id: "suite-clients",
+    label: "Suite Clients",
+    description: "Inspect how other tenra apps should enter the Tool Host boundary."
+  }
+];
+
+const suiteClientRequests: ToolRequest[] = [
+  {
+    id: "suite-registry-ledger-export",
+    kind: "write-file",
+    contents: "{\"source\":\"tenra Registry\",\"target\":\"tenra Ledger\"}",
+    path: "exports/registry-ledger-handoff.json",
+    projectId: "tenra-registry",
+    requestedAt: "0",
+    surface: "desktop"
+  },
+  {
+    id: "suite-scout-evidence-read",
+    kind: "read-file",
+    path: "runs/latest/evidence-pack.json",
+    projectId: "tenra-scout",
+    requestedAt: "0",
+    surface: "desktop"
+  },
+  {
+    id: "suite-assembly-send-document",
+    kind: "network-request",
+    method: "POST",
+    projectId: "tenra-assembly",
+    requestedAt: "0",
+    surface: "desktop",
+    url: "https://example.invalid/send-document"
+  },
+  {
+    id: "suite-proxy-profile-read",
+    kind: "read-file",
+    path: "profiles/default/profile.json",
+    projectId: "tenra-proxy",
+    requestedAt: "0",
+    surface: "desktop"
+  }
+];
+
 const fallbackOverview: RuntimeOverview = {
   productName: appMetadata.name,
   primarySurface: "desktop",
@@ -91,7 +137,7 @@ export default function App() {
   const [runtimeSource, setRuntimeSource] = useState<"rust" | "fallback">(
     "fallback"
   );
-  const [activeSection, setActiveSection] = useState(desktopNavigation[0].id);
+  const [activeSection, setActiveSection] = useState(suiteClientNavigation[0].id);
   const [selectedRequestId, setSelectedRequestId] = useState(
     fallbackBoundarySnapshot.sampleRequests[0]?.id ?? ""
   );
@@ -168,7 +214,7 @@ export default function App() {
         </div>
 
         <nav className="nav-list" aria-label="tenra Guardrail sections">
-          {desktopNavigation.map((item) => (
+          {suiteClientNavigation.map((item) => (
             <button
               key={item.id}
               className={item.id === activeSection ? "nav-item active" : "nav-item"}
@@ -430,6 +476,36 @@ export default function App() {
                     Tool Host.
                   </p>
                 )}
+              </div>
+            </div>
+          </Panel>
+
+          <Panel
+            id="suite-clients"
+            activeSection={activeSection}
+            title="Suite Client Requests"
+            subtitle="Other tenra apps should ask Guardrail before file writes, evidence reads, network sends, or profile access."
+          >
+            <div className="diagnostic-stack">
+              {suiteClientRequests.map((request) => (
+                <article key={request.id} className="list-row">
+                  <div>
+                    <strong>{request.projectId}</strong>
+                    <p>{describeRequest(request)} · {describeTarget(request)}</p>
+                  </div>
+                  <button
+                    className="request-button"
+                    disabled={runtimeSource !== "rust" || requestRunning}
+                    onClick={() => void runRequest(request)}
+                    type="button"
+                  >
+                    Test
+                  </button>
+                </article>
+              ))}
+              <div className="summary-block">
+                <span>Boundary rule</span>
+                <strong>Suite apps must send structured requests instead of bypassing policy locally.</strong>
               </div>
             </div>
           </Panel>
