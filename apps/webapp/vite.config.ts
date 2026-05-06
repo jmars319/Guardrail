@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import {
   attachExternalReviewDecision,
+  createExternalReviewDecision,
   exportExternalReviewDecisions,
   exportExternalReviewQueue,
   importExternalReviewPayload
@@ -67,7 +68,15 @@ export default defineConfig({
             const body = await readRequestBody(request);
             const payload = JSON.parse(body || "{}");
             const traceId = typeof payload.requestTraceId === "string" ? payload.requestTraceId : "";
-            const result = attachExternalReviewDecision(traceId, payload);
+            const result =
+              payload.schema === "tenra-guardrail.external-action-decision.v1"
+                ? attachExternalReviewDecision(traceId, payload)
+                : createExternalReviewDecision({
+                    traceId,
+                    decision: payload.decision,
+                    reason: typeof payload.reason === "string" ? payload.reason : undefined,
+                    reviewerLabel: typeof payload.reviewerLabel === "string" ? payload.reviewerLabel : undefined
+                  });
             response.statusCode = result.ok ? 200 : 400;
             response.setHeader("Content-Type", "application/json; charset=utf-8");
             response.end(JSON.stringify(result, null, 2));

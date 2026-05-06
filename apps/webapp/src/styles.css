@@ -34,6 +34,52 @@ body {
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
 }
 
+.queue-stack {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.queue-item {
+  display: grid;
+  gap: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 1rem;
+}
+
+.queue-item div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.queue-item span,
+.queue-item li {
+  color: #b9c0ca;
+  font-size: 0.85rem;
+}
+
+.queue-item ul {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.button-row button {
+  border: 1px solid rgba(243, 199, 107, 0.38);
+  border-radius: 999px;
+  background: rgba(243, 199, 107, 0.08);
+  color: #f5f5ef;
+  padding: 0.45rem 0.8rem;
+}
+
 .eyebrow {
   margin: 0 0 0.75rem;
   text-transform: uppercase;

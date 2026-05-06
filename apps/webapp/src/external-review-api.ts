@@ -2,6 +2,7 @@ import type {
   ExternalActionReviewDecision,
   ExternalActionReviewRequest
 } from "@guardrail/api-contracts";
+import { buildExternalActionReviewDecision } from "@guardrail/api-contracts";
 import {
   validateExternalActionReviewDecision,
   validateExternalActionReviewRequest
@@ -121,6 +122,28 @@ export function attachExternalReviewDecision(traceId: string, payload: unknown) 
     return { ok: false, errors: [`No review request found for trace ${traceId}.`] };
   }
 
+  item.decision = decision;
+  writePersistedQueue();
+  return { ok: true, item };
+}
+
+export function createExternalReviewDecision(input: {
+  traceId: string;
+  decision: ExternalActionReviewDecision["decision"];
+  reason?: string | undefined;
+  reviewerLabel?: string | undefined;
+}) {
+  const item = queue.find((candidate) => candidate.request.traceId === input.traceId);
+  if (!item) {
+    return { ok: false, errors: [`No review request found for trace ${input.traceId}.`] };
+  }
+
+  const decision = buildExternalActionReviewDecision({
+    request: item.request,
+    decision: input.decision,
+    reason: input.reason,
+    reviewerLabel: input.reviewerLabel
+  });
   item.decision = decision;
   writePersistedQueue();
   return { ok: true, item };
