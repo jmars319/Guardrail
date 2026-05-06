@@ -24,6 +24,7 @@
     "@guardrail/runtime-contracts": "workspace:*",
     "@guardrail/secrets": "workspace:*",
     "@guardrail/ui": "workspace:*",
+    "@guardrail/validation": "workspace:*",
     "@tauri-apps/api": "2.10.1",
     "react": "19.2.4",
     "react-dom": "19.2.4"

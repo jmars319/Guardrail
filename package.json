@@ -27,6 +27,7 @@
     "verify:web": "bash ./scripts/verify-web.sh",
     "verify:desktop": "bash ./scripts/verify-desktop.sh",
     "verify:mobile": "bash ./scripts/verify-mobile.sh",
+    "verify:handoffs": "node ./scripts/validate-handoffs.mjs",
     "verify:all": "bash ./scripts/verify-all.sh",
     "doctor": "bash ./scripts/doctor.sh"
   },

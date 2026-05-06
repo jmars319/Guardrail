@@ -218,6 +218,23 @@ button {
   gap: 0.9rem;
 }
 
+.review-import {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.review-import span {
+  color: #afbbb4;
+  font-size: 0.78rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.review-import textarea {
+  min-height: 180px;
+  resize: vertical;
+}
+
 .request-button {
   width: 100%;
   text-align: left;

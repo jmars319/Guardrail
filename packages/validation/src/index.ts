@@ -50,28 +50,38 @@ export function validateExternalActionReviewRequest(
   request: ExternalActionReviewRequest
 ): string[] {
   const errors: string[] = [];
+  const candidate =
+    request && typeof request === "object"
+      ? (request as Partial<ExternalActionReviewRequest>)
+      : undefined;
 
-  if (request.schema !== "tenra-guardrail.external-action-review.v1") {
+  if (!candidate) {
+    return ["external action review request must be an object"];
+  }
+
+  if (candidate.schema !== "tenra-guardrail.external-action-review.v1") {
     errors.push("external action review request must use schema tenra-guardrail.external-action-review.v1");
   }
 
   for (const [label, value] of [
-    ["exportedAt", request.exportedAt],
-    ["actorLabel", request.actorLabel],
-    ["targetLabel", request.targetLabel],
-    ["summary", request.summary],
-    ["traceId", request.traceId]
+    ["exportedAt", candidate.exportedAt],
+    ["actorLabel", candidate.actorLabel],
+    ["targetLabel", candidate.targetLabel],
+    ["summary", candidate.summary],
+    ["traceId", candidate.traceId]
   ] as const) {
     if (!isNonEmptyString(value)) {
       errors.push(`${label} must be a non-empty string`);
     }
   }
 
-  if (request.evidence.length === 0) {
+  const evidence = Array.isArray(candidate.evidence) ? candidate.evidence : [];
+
+  if (!Array.isArray(candidate.evidence) || evidence.length === 0) {
     errors.push("external action review request must include at least one evidence item");
   }
 
-  for (const item of request.evidence) {
+  for (const item of evidence) {
     if (!isNonEmptyString(item.label) || !isNonEmptyString(item.value)) {
       errors.push("external action review evidence items must include labels and values");
     }

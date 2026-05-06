@@ -53,6 +53,9 @@ importers:
       '@guardrail/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@guardrail/validation':
+        specifier: workspace:*
+        version: link:../../packages/validation
       '@tauri-apps/api':
         specifier: 2.10.1
         version: 2.10.1

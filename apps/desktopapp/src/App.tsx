@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import type { ExternalActionReviewRequest } from "@guardrail/api-contracts";
 import { appMetadata, defaultPorts, scaffoldDefaults } from "@guardrail/config";
 import {
   seededApprovals,
@@ -20,6 +21,7 @@ import type {
 } from "@guardrail/runtime-contracts";
 import { secretPatternCatalog } from "@guardrail/secrets";
 import { desktopNavigation, guardrailStatement } from "@guardrail/ui";
+import { validateExternalActionReviewRequest } from "@guardrail/validation";
 
 const fallbackSampleRequests: ToolRequest[] = [
   {
@@ -111,6 +113,24 @@ const suiteClientRequests: ToolRequest[] = [
   }
 ];
 
+const defaultExternalReviewRequest: ExternalActionReviewRequest = {
+  schema: "tenra-guardrail.external-action-review.v1",
+  exportedAt: "2026-05-06T17:30:00.000Z",
+  sourceApp: "assembly",
+  actionKind: "send-message",
+  actorLabel: "Assembly document workflow",
+  targetLabel: "Customer-facing past due notice",
+  summary: "Assembly wants to send a Registry-generated customer notice after content review.",
+  evidence: [
+    {
+      label: "Source schema",
+      value: "tenra-registry.assembly-document-request.v1"
+    }
+  ],
+  recommendedDecision: "review",
+  traceId: "guardrail-fixture-external-action-review"
+};
+
 const fallbackOverview: RuntimeOverview = {
   productName: appMetadata.name,
   primarySurface: "desktop",
@@ -143,6 +163,13 @@ export default function App() {
   );
   const [lastResult, setLastResult] = useState<ToolExecutionResponse | null>(null);
   const [requestRunning, setRequestRunning] = useState(false);
+  const [externalReviewText, setExternalReviewText] = useState(
+    JSON.stringify(defaultExternalReviewRequest, null, 2)
+  );
+  const [externalReviewErrors, setExternalReviewErrors] = useState<string[]>([]);
+  const [externalReview, setExternalReview] = useState<ExternalActionReviewRequest | null>(
+    defaultExternalReviewRequest
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -224,6 +251,18 @@ export default function App() {
     link.download = `tenra-guardrail-runtime-${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  function importExternalReview() {
+    try {
+      const parsed = JSON.parse(externalReviewText) as ExternalActionReviewRequest;
+      const errors = validateExternalActionReviewRequest(parsed);
+      setExternalReviewErrors(errors);
+      setExternalReview(errors.length === 0 ? parsed : null);
+    } catch (error) {
+      setExternalReview(null);
+      setExternalReviewErrors([error instanceof Error ? error.message : "External review JSON could not be parsed."]);
+    }
   }
 
   return (
@@ -534,6 +573,31 @@ export default function App() {
                 <span>Boundary rule</span>
                 <strong>Suite apps must send structured requests instead of bypassing policy locally.</strong>
               </div>
+              <div className="summary-block">
+                <span>External action review</span>
+                <strong>
+                  {externalReview
+                    ? `${externalReview.sourceApp} / ${externalReview.actionKind} / ${externalReview.recommendedDecision ?? "review"}`
+                    : "No valid review loaded"}
+                </strong>
+              </div>
+              <label className="review-import">
+                <span>Review request JSON</span>
+                <textarea
+                  value={externalReviewText}
+                  onChange={(event) => setExternalReviewText(event.target.value)}
+                />
+              </label>
+              <button className="request-button" type="button" onClick={importExternalReview}>
+                Import External Review
+              </button>
+              {externalReviewErrors.length > 0 ? (
+                <ul className="checklist">
+                  {externalReviewErrors.map((error) => (
+                    <li key={error}>{error}</li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
           </Panel>
 
