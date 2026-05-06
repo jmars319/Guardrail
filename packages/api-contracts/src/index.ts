@@ -95,7 +95,19 @@ export interface ExternalActionReviewDecision {
   reviewerLabel: string;
   reason: string;
   evidenceCount: number;
+  sourceReturn: {
+    app: GuardrailReviewSourceApp;
+    traceId: string;
+    expectedSchema: string;
+    action: "apply-guardrail-decision";
+  };
 }
+
+const returnSchemaByApp: Partial<Record<GuardrailReviewSourceApp, string>> = {
+  align: "tenra-align.review-reply-route.v1",
+  scout: "tenra-scout.opportunity-handoff.v1",
+  vicina: "tenra-vicina.workflow-handoff.v1"
+};
 
 export function buildExternalActionReviewDecision(input: {
   request: ExternalActionReviewRequest;
@@ -120,7 +132,13 @@ export function buildExternalActionReviewDecision(input: {
         ? "Reviewed evidence and approved the requested action."
         : input.decision === "deny"
           ? "Reviewed evidence and denied the requested action."
-          : "More human review is required before this action can proceed."),
-    evidenceCount: input.request.evidence.length
+        : "More human review is required before this action can proceed."),
+    evidenceCount: input.request.evidence.length,
+    sourceReturn: {
+      app: input.request.sourceApp,
+      traceId: input.request.traceId,
+      expectedSchema: returnSchemaByApp[input.request.sourceApp] ?? input.request.schema,
+      action: "apply-guardrail-decision"
+    }
   };
 }

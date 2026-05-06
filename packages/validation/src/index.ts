@@ -130,5 +130,23 @@ export function validateExternalActionReviewDecision(
     errors.push("evidenceCount must be a non-negative number");
   }
 
+  if (!candidate.sourceReturn || typeof candidate.sourceReturn !== "object") {
+    errors.push("sourceReturn must describe where the decision should be applied");
+  } else {
+    for (const [label, value] of [
+      ["sourceReturn.app", candidate.sourceReturn.app],
+      ["sourceReturn.traceId", candidate.sourceReturn.traceId],
+      ["sourceReturn.expectedSchema", candidate.sourceReturn.expectedSchema],
+      ["sourceReturn.action", candidate.sourceReturn.action]
+    ] as const) {
+      if (!isNonEmptyString(value)) {
+        errors.push(`${label} must be a non-empty string`);
+      }
+    }
+    if (candidate.sourceReturn.action !== "apply-guardrail-decision") {
+      errors.push("sourceReturn.action must be apply-guardrail-decision");
+    }
+  }
+
   return errors;
 }

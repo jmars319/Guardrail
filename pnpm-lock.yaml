@@ -93,12 +93,18 @@ importers:
 
   apps/webapp:
     dependencies:
+      '@guardrail/api-contracts':
+        specifier: workspace:*
+        version: link:../../packages/api-contracts
       '@guardrail/config':
         specifier: workspace:*
         version: link:../../packages/config
       '@guardrail/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@guardrail/validation':
+        specifier: workspace:*
+        version: link:../../packages/validation
       react:
         specifier: 19.2.4
         version: 19.2.4

@@ -9,5 +9,11 @@
   "decision": "review",
   "reviewerLabel": "local-operator",
   "reason": "More human review is required before this action can proceed.",
-  "evidenceCount": 1
+  "evidenceCount": 1,
+  "sourceReturn": {
+    "app": "assembly",
+    "traceId": "guardrail-fixture-external-action-review",
+    "expectedSchema": "tenra-guardrail.external-action-review.v1",
+    "action": "apply-guardrail-decision"
+  }
 }
