@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import {
   attachExternalReviewDecision,
+  exportExternalReviewDecisions,
   exportExternalReviewQueue,
   importExternalReviewPayload
 } from "./src/external-review-api";
@@ -49,12 +50,20 @@ export default defineConfig({
         });
 
         server.middlewares.use("/api/external-review-decisions", async (request, response, next) => {
-          if (request.method !== "POST") {
+          if (request.method !== "GET" && request.method !== "POST") {
             next();
             return;
           }
 
           try {
+            if (request.method === "GET") {
+              const result = exportExternalReviewDecisions();
+              response.statusCode = 200;
+              response.setHeader("Content-Type", "application/json; charset=utf-8");
+              response.end(JSON.stringify(result, null, 2));
+              return;
+            }
+
             const body = await readRequestBody(request);
             const payload = JSON.parse(body || "{}");
             const traceId = typeof payload.requestTraceId === "string" ? payload.requestTraceId : "";

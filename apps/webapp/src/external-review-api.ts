@@ -6,6 +6,8 @@ import {
   validateExternalActionReviewDecision,
   validateExternalActionReviewRequest
 } from "@guardrail/validation";
+import fs from "node:fs";
+import path from "node:path";
 
 export interface ExternalReviewQueueItem {
   request: ExternalActionReviewRequest;
@@ -13,7 +15,37 @@ export interface ExternalReviewQueueItem {
   decision?: ExternalActionReviewDecision | undefined;
 }
 
-const queue: ExternalReviewQueueItem[] = [];
+const queuePath = path.resolve(process.env.GUARDRAIL_EXTERNAL_REVIEW_QUEUE_PATH ?? ".tenra-guardrail-external-reviews.json");
+
+function readPersistedQueue(): ExternalReviewQueueItem[] {
+  if (!fs.existsSync(queuePath)) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(fs.readFileSync(queuePath, "utf8")) as { items?: ExternalReviewQueueItem[] };
+    return Array.isArray(parsed.items) ? parsed.items : [];
+  } catch {
+    return [];
+  }
+}
+
+function writePersistedQueue() {
+  fs.writeFileSync(
+    queuePath,
+    JSON.stringify(
+      {
+        schema: "tenra-guardrail.external-review-queue.v1",
+        updatedAt: new Date().toISOString(),
+        items: queue
+      },
+      null,
+      2
+    )
+  );
+}
+
+const queue: ExternalReviewQueueItem[] = readPersistedQueue();
 
 function upsertRequest(request: ExternalActionReviewRequest): ExternalReviewQueueItem {
   const importedAt = new Date().toISOString();
@@ -29,6 +61,7 @@ function upsertRequest(request: ExternalActionReviewRequest): ExternalReviewQueu
   } else {
     queue.unshift(item);
   }
+  writePersistedQueue();
 
   return item;
 }
@@ -39,6 +72,15 @@ export function exportExternalReviewQueue() {
     schema: "tenra-guardrail.external-review-queue.v1",
     exportedAt: new Date().toISOString(),
     items: queue
+  };
+}
+
+export function exportExternalReviewDecisions() {
+  return {
+    ok: true,
+    schema: "tenra-guardrail.external-review-decisions.v1",
+    exportedAt: new Date().toISOString(),
+    decisions: queue.flatMap((item) => (item.decision ? [item.decision] : []))
   };
 }
 
@@ -80,5 +122,6 @@ export function attachExternalReviewDecision(traceId: string, payload: unknown) 
   }
 
   item.decision = decision;
+  writePersistedQueue();
   return { ok: true, item };
 }

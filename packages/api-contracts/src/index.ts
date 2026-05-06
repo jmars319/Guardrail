@@ -105,7 +105,11 @@ export interface ExternalActionReviewDecision {
 
 const returnSchemaByApp: Partial<Record<GuardrailReviewSourceApp, string>> = {
   align: "tenra-align.review-reply-route.v1",
+  assembly: "tenra-assembly.proxy-notice-handoff.v1",
+  derive: "tenra-derive.reasoning-brief.v1",
+  partition: "tenra-partition.lab-validation-result.v1",
   scout: "tenra-scout.opportunity-handoff.v1",
+  sentinel: "tenra-sentinel.risk-brief.v1",
   vicina: "tenra-vicina.workflow-handoff.v1"
 };
 
