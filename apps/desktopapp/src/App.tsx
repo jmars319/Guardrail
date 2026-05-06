@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { ExternalActionReviewRequest } from "@guardrail/api-contracts";
+import {
+  buildExternalActionReviewDecision,
+  type ExternalActionReviewDecision,
+  type ExternalActionReviewDecisionValue,
+  type ExternalActionReviewRequest
+} from "@guardrail/api-contracts";
 import { appMetadata, defaultPorts, scaffoldDefaults } from "@guardrail/config";
 import {
   seededApprovals,
@@ -21,7 +26,10 @@ import type {
 } from "@guardrail/runtime-contracts";
 import { secretPatternCatalog } from "@guardrail/secrets";
 import { desktopNavigation, guardrailStatement } from "@guardrail/ui";
-import { validateExternalActionReviewRequest } from "@guardrail/validation";
+import {
+  validateExternalActionReviewDecision,
+  validateExternalActionReviewRequest
+} from "@guardrail/validation";
 
 const fallbackSampleRequests: ToolRequest[] = [
   {
@@ -131,6 +139,14 @@ const defaultExternalReviewRequest: ExternalActionReviewRequest = {
   traceId: "guardrail-fixture-external-action-review"
 };
 
+const externalReviewQueueStorageKey = "tenra-guardrail-external-review-queue:v1";
+
+type ExternalReviewQueueItem = {
+  request: ExternalActionReviewRequest;
+  importedAt: string;
+  decision?: ExternalActionReviewDecision | undefined;
+};
+
 const fallbackOverview: RuntimeOverview = {
   productName: appMetadata.name,
   primarySurface: "desktop",
@@ -170,6 +186,10 @@ export default function App() {
   const [externalReview, setExternalReview] = useState<ExternalActionReviewRequest | null>(
     defaultExternalReviewRequest
   );
+  const [externalReviewQueue, setExternalReviewQueue] = useState<ExternalReviewQueueItem[]>([
+    { request: defaultExternalReviewRequest, importedAt: defaultExternalReviewRequest.exportedAt }
+  ]);
+  const [lastExternalDecisionJson, setLastExternalDecisionJson] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -201,6 +221,25 @@ export default function App() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(externalReviewQueueStorageKey);
+      if (!stored) {
+        return;
+      }
+      const parsed = JSON.parse(stored) as ExternalReviewQueueItem[];
+      if (Array.isArray(parsed)) {
+        setExternalReviewQueue(parsed.filter((item) => validateExternalActionReviewRequest(item.request).length === 0));
+      }
+    } catch {
+      window.localStorage.removeItem(externalReviewQueueStorageKey);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(externalReviewQueueStorageKey, JSON.stringify(externalReviewQueue));
+  }, [externalReviewQueue]);
 
   const selectedRequest =
     boundarySnapshot.sampleRequests.find((request) => request.id === selectedRequestId) ??
@@ -259,10 +298,37 @@ export default function App() {
       const errors = validateExternalActionReviewRequest(parsed);
       setExternalReviewErrors(errors);
       setExternalReview(errors.length === 0 ? parsed : null);
+      if (errors.length === 0) {
+        setExternalReviewQueue((current) => {
+          const withoutExisting = current.filter((item) => item.request.traceId !== parsed.traceId);
+          return [{ request: parsed, importedAt: new Date().toISOString() }, ...withoutExisting].slice(0, 12);
+        });
+      }
     } catch (error) {
       setExternalReview(null);
       setExternalReviewErrors([error instanceof Error ? error.message : "External review JSON could not be parsed."]);
     }
+  }
+
+  function decideExternalReview(
+    request: ExternalActionReviewRequest,
+    decision: ExternalActionReviewDecisionValue
+  ) {
+    const payload = buildExternalActionReviewDecision({ request, decision });
+    const errors = validateExternalActionReviewDecision(payload);
+    if (errors.length > 0) {
+      setExternalReviewErrors(errors);
+      return;
+    }
+
+    const serialized = JSON.stringify(payload, null, 2);
+    setLastExternalDecisionJson(serialized);
+    void navigator.clipboard?.writeText(serialized);
+    setExternalReviewQueue((current) =>
+      current.map((item) =>
+        item.request.traceId === request.traceId ? { ...item, decision: payload } : item
+      )
+    );
   }
 
   return (
@@ -597,6 +663,39 @@ export default function App() {
                     <li key={error}>{error}</li>
                   ))}
                 </ul>
+              ) : null}
+              <div className="summary-block">
+                <span>Saved review queue</span>
+                <strong>{externalReviewQueue.length} request(s)</strong>
+              </div>
+              <div className="review-queue">
+                {externalReviewQueue.map((item) => (
+                  <article key={item.request.traceId} className="list-row review-queue-item">
+                    <div>
+                      <strong>{item.request.targetLabel}</strong>
+                      <p>
+                        {item.request.sourceApp} · {item.request.actionKind} ·{" "}
+                        {item.decision ? item.decision.decision : item.request.recommendedDecision ?? "review"}
+                      </p>
+                      <small>{item.request.summary}</small>
+                    </div>
+                    <div className="decision-actions">
+                      {(["allow", "review", "deny"] as const).map((decision) => (
+                        <button
+                          key={decision}
+                          className="request-button"
+                          type="button"
+                          onClick={() => decideExternalReview(item.request, decision)}
+                        >
+                          {decision}
+                        </button>
+                      ))}
+                    </div>
+                  </article>
+                ))}
+              </div>
+              {lastExternalDecisionJson ? (
+                <pre className="preview-block">{lastExternalDecisionJson}</pre>
               ) : null}
             </div>
           </Panel>

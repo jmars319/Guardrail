@@ -2,7 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 
 const fixtureDir = path.resolve("fixtures/handoffs");
-const expectedSchemas = new Set(["tenra-guardrail.external-action-review.v1"]);
+const expectedSchemas = new Set([
+  "tenra-guardrail.external-action-review.v1",
+  "tenra-guardrail.external-action-decision.v1"
+]);
 
 function listJsonFiles(dir) {
   if (!fs.existsSync(dir)) return [];

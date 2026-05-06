@@ -1,6 +1,9 @@
 import type { GuardrailPolicy } from "@guardrail/policy";
 import type { ProviderDefinition } from "@guardrail/provider-config";
-import type { ExternalActionReviewRequest } from "@guardrail/api-contracts";
+import type {
+  ExternalActionReviewDecision,
+  ExternalActionReviewRequest
+} from "@guardrail/api-contracts";
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
@@ -85,6 +88,46 @@ export function validateExternalActionReviewRequest(
     if (!isNonEmptyString(item.label) || !isNonEmptyString(item.value)) {
       errors.push("external action review evidence items must include labels and values");
     }
+  }
+
+  return errors;
+}
+
+export function validateExternalActionReviewDecision(
+  decision: ExternalActionReviewDecision
+): string[] {
+  const errors: string[] = [];
+  const candidate =
+    decision && typeof decision === "object"
+      ? (decision as Partial<ExternalActionReviewDecision>)
+      : undefined;
+
+  if (!candidate) {
+    return ["external action review decision must be an object"];
+  }
+
+  if (candidate.schema !== "tenra-guardrail.external-action-decision.v1") {
+    errors.push("external action review decision must use schema tenra-guardrail.external-action-decision.v1");
+  }
+
+  if (!["allow", "review", "deny"].includes(candidate.decision ?? "")) {
+    errors.push("external action review decision must be allow, review, or deny");
+  }
+
+  for (const [label, value] of [
+    ["decidedAt", candidate.decidedAt],
+    ["requestTraceId", candidate.requestTraceId],
+    ["targetLabel", candidate.targetLabel],
+    ["reviewerLabel", candidate.reviewerLabel],
+    ["reason", candidate.reason]
+  ] as const) {
+    if (!isNonEmptyString(value)) {
+      errors.push(`${label} must be a non-empty string`);
+    }
+  }
+
+  if (typeof candidate.evidenceCount !== "number" || candidate.evidenceCount < 0) {
+    errors.push("evidenceCount must be a non-negative number");
   }
 
   return errors;

@@ -80,3 +80,47 @@ export interface ExternalActionReviewRequest {
   recommendedDecision?: "allow" | "review" | "deny";
   traceId: string;
 }
+
+export type ExternalActionReviewDecisionValue = "allow" | "review" | "deny";
+
+export interface ExternalActionReviewDecision {
+  schema: "tenra-guardrail.external-action-decision.v1";
+  decidedAt: string;
+  sourceApp: "guardrail";
+  requestTraceId: string;
+  returnToApp: GuardrailReviewSourceApp;
+  actionKind: GuardrailExternalActionKind;
+  targetLabel: string;
+  decision: ExternalActionReviewDecisionValue;
+  reviewerLabel: string;
+  reason: string;
+  evidenceCount: number;
+}
+
+export function buildExternalActionReviewDecision(input: {
+  request: ExternalActionReviewRequest;
+  decision: ExternalActionReviewDecisionValue;
+  reviewerLabel?: string | undefined;
+  reason?: string | undefined;
+  decidedAt?: string | undefined;
+}): ExternalActionReviewDecision {
+  return {
+    schema: "tenra-guardrail.external-action-decision.v1",
+    decidedAt: input.decidedAt ?? new Date().toISOString(),
+    sourceApp: "guardrail",
+    requestTraceId: input.request.traceId,
+    returnToApp: input.request.sourceApp,
+    actionKind: input.request.actionKind,
+    targetLabel: input.request.targetLabel,
+    decision: input.decision,
+    reviewerLabel: input.reviewerLabel ?? "local-operator",
+    reason:
+      input.reason ??
+      (input.decision === "allow"
+        ? "Reviewed evidence and approved the requested action."
+        : input.decision === "deny"
+          ? "Reviewed evidence and denied the requested action."
+          : "More human review is required before this action can proceed."),
+    evidenceCount: input.request.evidence.length
+  };
+}
