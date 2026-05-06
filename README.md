@@ -20,7 +20,7 @@ These constraints are architectural, not aspirational:
 
 The monorepo uses `pnpm` workspaces:
 
-- `apps/desktopapp`: primary Tauri + React + TypeScript surface.
+- `apps/desktopapp`: primary Tauri + React + TypeScript surface with local runtime diagnostics and JSON snapshot export for policy/audit review.
 - `apps/webapp`: lightweight future-facing web placeholder.
 - `apps/mobileapp`: lightweight mobile placeholder.
 - `packages/shared-types`: common type aliases and utility contracts.

@@ -204,6 +204,28 @@ export default function App() {
     }
   }
 
+  function exportRuntimeSnapshot() {
+    const payload = {
+      auditEntries: boundarySnapshot.auditEntries,
+      boundarySnapshot,
+      exportedAt: new Date().toISOString(),
+      lastResult,
+      overview,
+      runtimeSource,
+      schema: "tenra-guardrail-runtime-snapshot:v1"
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json;charset=utf-8"
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `tenra-guardrail-runtime-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="desktop-shell">
       <aside className="sidebar">
@@ -383,6 +405,11 @@ export default function App() {
                 <span>Network enabled</span>
                 <strong>{String(boundarySnapshot.policy.networkEnabled)}</strong>
               </div>
+
+              <button className="request-button" type="button" onClick={exportRuntimeSnapshot}>
+                <span>Export runtime snapshot</span>
+                <small>Policy, current overview, audit entries, and last allow/deny payload</small>
+              </button>
 
               <div className="request-actions">
                 {boundarySnapshot.sampleRequests.map((request) => (
