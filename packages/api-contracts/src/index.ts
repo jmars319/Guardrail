@@ -40,3 +40,43 @@ export interface RuntimeEvent {
   type: "approval-requested" | "session-updated";
   summary: string;
 }
+
+export type GuardrailReviewSourceApp =
+  | "align"
+  | "assembly"
+  | "derive"
+  | "facet"
+  | "ledger"
+  | "partition"
+  | "proxy"
+  | "registry"
+  | "scout"
+  | "sentinel"
+  | "vicina"
+  | "manual";
+
+export type GuardrailExternalActionKind =
+  | "publish"
+  | "send-message"
+  | "write-file"
+  | "run-command"
+  | "post-charge"
+  | "execute-system-change"
+  | "moderation-action"
+  | "other";
+
+export interface ExternalActionReviewRequest {
+  schema: "tenra-guardrail.external-action-review.v1";
+  exportedAt: string;
+  sourceApp: GuardrailReviewSourceApp;
+  actionKind: GuardrailExternalActionKind;
+  actorLabel: string;
+  targetLabel: string;
+  summary: string;
+  evidence: Array<{
+    label: string;
+    value: string;
+  }>;
+  recommendedDecision?: "allow" | "review" | "deny";
+  traceId: string;
+}

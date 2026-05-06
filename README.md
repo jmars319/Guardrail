@@ -52,6 +52,7 @@ Web and mobile surfaces may exist later, but they are intentionally inactive in 
 ## Daily commands
 
 - `pnpm dev:desktop`: run the primary Tauri desktop app.
+- `pnpm launch:desktop`: open the installed macOS desktop app without rebuilding.
 - `pnpm dev:web`: run the future web placeholder.
 - `pnpm dev:mobile`: run the mobile placeholder notice.
 - `pnpm verify:all`: run lint, typecheck, and app verification flows.

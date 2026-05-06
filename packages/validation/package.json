@@ -12,6 +12,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@guardrail/api-contracts": "workspace:*",
     "@guardrail/policy": "workspace:*",
     "@guardrail/provider-config": "workspace:*"
   }

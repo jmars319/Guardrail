@@ -20,6 +20,7 @@
     "build:desktop": "pnpm --filter @guardrail/desktopapp build:tauri",
     "package:desktop": "pnpm run build:desktop",
     "install:desktop": "pnpm run package:desktop && bash ./scripts/install-desktop-app.sh",
+    "launch:desktop": "open -n \"/Applications/tenra Guardrail.app\"",
     "build:mobile": "pnpm --filter @guardrail/mobileapp build",
     "lint": "pnpm -r --workspace-concurrency=1 run lint",
     "typecheck": "pnpm -r --workspace-concurrency=1 run typecheck",
