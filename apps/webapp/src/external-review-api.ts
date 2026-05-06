@@ -14,6 +14,12 @@ export interface ExternalReviewQueueItem {
   request: ExternalActionReviewRequest;
   importedAt: string;
   decision?: ExternalActionReviewDecision | undefined;
+  callback?: {
+    endpoint?: string | undefined;
+    status: "not-configured" | "sent" | "failed";
+    message?: string | undefined;
+    deliveredAt?: string | undefined;
+  } | undefined;
 }
 
 const queuePath = path.resolve(process.env.GUARDRAIL_EXTERNAL_REVIEW_QUEUE_PATH ?? ".tenra-guardrail-external-reviews.json");
@@ -132,6 +138,7 @@ export function createExternalReviewDecision(input: {
   decision: ExternalActionReviewDecision["decision"];
   reason?: string | undefined;
   reviewerLabel?: string | undefined;
+  callbackUrl?: string | undefined;
 }) {
   const item = queue.find((candidate) => candidate.request.traceId === input.traceId);
   if (!item) {
@@ -145,6 +152,59 @@ export function createExternalReviewDecision(input: {
     reviewerLabel: input.reviewerLabel
   });
   item.decision = decision;
+  item.callback = input.callbackUrl
+    ? {
+        endpoint: input.callbackUrl,
+        status: "not-configured",
+        message: "Decision callback has not been sent yet."
+      }
+    : undefined;
   writePersistedQueue();
   return { ok: true, item };
+}
+
+export async function acknowledgeExternalReviewDecision(traceId: string, callbackUrl?: string | undefined) {
+  const item = queue.find((candidate) => candidate.request.traceId === traceId);
+  if (!item?.decision) {
+    return { ok: false, errors: [`No decision found for trace ${traceId}.`] };
+  }
+
+  const endpoint = callbackUrl?.trim() || item.callback?.endpoint?.trim();
+  if (!endpoint) {
+    item.callback = {
+      status: "not-configured",
+      message: "No source callback endpoint configured."
+    };
+    writePersistedQueue();
+    return { ok: true, item };
+  }
+
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(item.decision)
+    });
+
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    item.callback = {
+      endpoint,
+      status: "sent",
+      deliveredAt: new Date().toISOString(),
+      message: `${response.status} ${response.statusText || "OK"}`
+    };
+  } catch (error) {
+    item.callback = {
+      endpoint,
+      status: "failed",
+      deliveredAt: new Date().toISOString(),
+      message: error instanceof Error ? error.message : "Decision callback failed."
+    };
+  }
+
+  writePersistedQueue();
+  return { ok: item.callback.status === "sent", item, errors: item.callback.status === "sent" ? [] : [item.callback.message ?? "Decision callback failed."] };
 }

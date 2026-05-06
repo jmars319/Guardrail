@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import {
+  acknowledgeExternalReviewDecision,
   attachExternalReviewDecision,
   createExternalReviewDecision,
   exportExternalReviewDecisions,
@@ -75,7 +76,8 @@ export default defineConfig({
                     traceId,
                     decision: payload.decision,
                     reason: typeof payload.reason === "string" ? payload.reason : undefined,
-                    reviewerLabel: typeof payload.reviewerLabel === "string" ? payload.reviewerLabel : undefined
+                    reviewerLabel: typeof payload.reviewerLabel === "string" ? payload.reviewerLabel : undefined,
+                    callbackUrl: typeof payload.callbackUrl === "string" ? payload.callbackUrl : undefined
                   });
             response.statusCode = result.ok ? 200 : 400;
             response.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -84,6 +86,29 @@ export default defineConfig({
             response.statusCode = 400;
             response.setHeader("Content-Type", "application/json; charset=utf-8");
             response.end(JSON.stringify({ ok: false, errors: [error instanceof Error ? error.message : "Decision API failed."] }));
+          }
+        });
+
+        server.middlewares.use("/api/external-review-callbacks", async (request, response, next) => {
+          if (request.method !== "POST") {
+            next();
+            return;
+          }
+
+          try {
+            const body = await readRequestBody(request);
+            const payload = JSON.parse(body || "{}");
+            const result = await acknowledgeExternalReviewDecision(
+              typeof payload.requestTraceId === "string" ? payload.requestTraceId : "",
+              typeof payload.callbackUrl === "string" ? payload.callbackUrl : undefined
+            );
+            response.statusCode = result.ok ? 200 : 400;
+            response.setHeader("Content-Type", "application/json; charset=utf-8");
+            response.end(JSON.stringify(result, null, 2));
+          } catch (error) {
+            response.statusCode = 400;
+            response.setHeader("Content-Type", "application/json; charset=utf-8");
+            response.end(JSON.stringify({ ok: false, errors: [error instanceof Error ? error.message : "Decision callback failed."] }));
           }
         });
       }
