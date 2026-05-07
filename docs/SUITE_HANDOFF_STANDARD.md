@@ -8,6 +8,10 @@ shared review and decision service
 
 keep unique as a reusable module; source apps should request decisions instead of embedding review policy.
 
+## Standalone Mode
+
+Runs as a complete review queue and decision workspace with local requests, templates, decisions, callback retries, and exports.
+
 ## Accepted Inputs
 
 - `tenra-scout.opportunity-handoff.v1` from tenra Scout
