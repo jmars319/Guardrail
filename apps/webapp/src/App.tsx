@@ -21,6 +21,18 @@ type QueueResponse = {
   errors?: string[];
 };
 
+function downloadJsonFile(payload: unknown, filename: string) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 export default function App() {
   const [items, setItems] = useState<ReviewQueueItem[]>([]);
   const [notice, setNotice] = useState("Loading external review queue.");
@@ -28,6 +40,7 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [sourceFilter, setSourceFilter] = useState("all");
   const [callbackUrlByTrace, setCallbackUrlByTrace] = useState<Record<string, string>>({});
+  const [selectedTraceId, setSelectedTraceId] = useState("");
 
   const filteredItems = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -49,6 +62,14 @@ export default function App() {
   }, [items, query, sourceFilter]);
   const openItems = useMemo(() => filteredItems.filter((item) => !item.decision), [filteredItems]);
   const decidedItems = useMemo(() => filteredItems.filter((item) => item.decision), [filteredItems]);
+  const failedCallbackItems = useMemo(
+    () => items.filter((item) => item.decision && item.callback?.status === "failed"),
+    [items]
+  );
+  const selectedItem = useMemo(
+    () => items.find((item) => item.request.traceId === selectedTraceId) ?? decidedItems[0] ?? openItems[0],
+    [decidedItems, items, openItems, selectedTraceId]
+  );
   const sourceOptions = useMemo(
     () => Array.from(new Set(items.map((item) => item.request.sourceApp))).sort(),
     [items]
@@ -118,6 +139,12 @@ export default function App() {
       setNotice(error instanceof Error ? error.message : "Decision callback failed.");
     } finally {
       setPendingTraceId("");
+    }
+  }
+
+  async function retryFailedCallbacks() {
+    for (const item of failedCallbackItems) {
+      await sendDecisionCallback(item);
     }
   }
 
@@ -209,6 +236,14 @@ export default function App() {
 
         <article className="web-panel">
           <h2>Decisions</h2>
+          {failedCallbackItems.length ? (
+            <div className="retry-banner">
+              <span>{failedCallbackItems.length} failed callback(s)</span>
+              <button disabled={Boolean(pendingTraceId)} onClick={() => void retryFailedCallbacks()} type="button">
+                Retry failed
+              </button>
+            </div>
+          ) : null}
           <div className="queue-stack">
             {decidedItems.length ? (
               decidedItems.slice(0, 8).map((item) => (
@@ -235,6 +270,9 @@ export default function App() {
                     />
                   </label>
                   <div className="button-row">
+                    <button onClick={() => setSelectedTraceId(item.request.traceId)} type="button">
+                      Details
+                    </button>
                     <button
                       disabled={pendingTraceId === item.request.traceId}
                       onClick={() => void sendDecisionCallback(item)}
@@ -251,6 +289,53 @@ export default function App() {
           </div>
         </article>
       </section>
+
+      {selectedItem ? (
+        <section className="web-panel decision-detail">
+          <div className="detail-heading">
+            <div>
+              <p className="eyebrow">Decision detail</p>
+              <h2>{selectedItem.request.traceId}</h2>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                downloadJsonFile(
+                  {
+                    schema: "tenra-guardrail.external-review-detail.v1",
+                    exportedAt: new Date().toISOString(),
+                    request: selectedItem.request,
+                    decision: selectedItem.decision ?? null,
+                    callback: selectedItem.callback ?? null
+                  },
+                  `${selectedItem.request.traceId}-guardrail-review.json`
+                )
+              }
+            >
+              Export JSON
+            </button>
+          </div>
+          <div className="detail-grid">
+            <div>
+              <span>Source</span>
+              <strong>{selectedItem.request.sourceApp}</strong>
+            </div>
+            <div>
+              <span>Action</span>
+              <strong>{selectedItem.request.actionKind}</strong>
+            </div>
+            <div>
+              <span>Decision</span>
+              <strong>{selectedItem.decision?.decision ?? "pending"}</strong>
+            </div>
+            <div>
+              <span>Callback</span>
+              <strong>{selectedItem.callback?.status ?? "not configured"}</strong>
+            </div>
+          </div>
+          <pre>{JSON.stringify({ request: selectedItem.request, decision: selectedItem.decision, callback: selectedItem.callback }, null, 2)}</pre>
+        </section>
+      ) : null}
     </main>
   );
 }

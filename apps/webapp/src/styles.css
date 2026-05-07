@@ -107,6 +107,62 @@ body {
   padding: 0.45rem 0.8rem;
 }
 
+.retry-banner,
+.detail-heading,
+.detail-grid {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.retry-banner,
+.detail-heading {
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.retry-banner {
+  border: 1px solid rgba(243, 199, 107, 0.22);
+  border-radius: 12px;
+  background: rgba(243, 199, 107, 0.08);
+  padding: 0.75rem;
+}
+
+.retry-banner button,
+.decision-detail button {
+  border: 1px solid rgba(243, 199, 107, 0.38);
+  border-radius: 999px;
+  background: rgba(243, 199, 107, 0.08);
+  color: #f5f5ef;
+  padding: 0.45rem 0.8rem;
+}
+
+.detail-grid {
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.detail-grid div {
+  min-width: 160px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.75rem;
+}
+
+.detail-grid span {
+  display: block;
+  color: #b9c0ca;
+  font-size: 0.78rem;
+}
+
+.decision-detail pre {
+  max-height: 420px;
+  overflow: auto;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.24);
+  padding: 1rem;
+}
+
 .eyebrow {
   margin: 0 0 0.75rem;
   text-transform: uppercase;
