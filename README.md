@@ -1,65 +1,75 @@
 # tenra Guardrail
 
-tenra Guardrail is a local-first, desktop-first application for running AI agents inside hard runtime boundaries. The desktop shell wraps a headless Rust service that routes all agent actions through a Tool Host instead of letting models execute tools directly.
+tenra Guardrail is a local-first desktop application for running AI agents inside explicit runtime boundaries. The desktop shell wraps a Rust service and routes agent actions through a Tool Host boundary instead of letting models execute tools directly.
 
-This repository is intentionally not a generic SaaS starter. The v0 scaffold favors a stable desktop product surface, explicit workspace contracts, and future-proof structure for policy enforcement, approvals, auditability, and provider configuration.
+The project is not a generic SaaS starter. Its center of gravity is policy enforcement, approvals, auditability, provider configuration, and local runtime control.
 
-## Core constraints
+## Operational Purpose
 
-These constraints are architectural, not aspirational:
+- Define a deny-by-default Tool Host boundary for agent actions.
+- Keep policy enforcement deterministic and inspectable.
+- Separate UI, runtime service, provider configuration, and policy contracts.
+- Provide local diagnostics and exportable snapshots for audit review.
+
+## Design Posture
 
 - Agents never execute tools directly.
-- All actions flow through a Tool Host boundary.
-- Tool Host policy enforcement is deterministic and deny-by-default.
-- Network-capable agent tooling is disabled by default in v0.
-- The UI wrapper and runtime service remain separate.
-- `apps/desktopapp` is the primary active app.
-- `apps/webapp` and `apps/mobileapp` are placeholders for later activation.
+- Network-capable tooling is disabled by default in v0.
+- Desktop-first because local filesystem, process, approval, and secrets boundaries live on the machine.
+- Web and mobile surfaces are placeholders until the runtime spine is mature.
+- Policy and runtime contracts are shared packages, not UI-only conventions.
 
-## Repository layout
+## Architecture
 
-The monorepo uses `pnpm` workspaces:
+```text
+apps/
+  desktopapp/   Primary Tauri + React product surface
+  webapp/       Future web placeholder
+  mobileapp/    Future mobile placeholder
 
-- `apps/desktopapp`: primary Tauri + React + TypeScript surface with local runtime diagnostics and JSON snapshot export for policy/audit review.
-- `apps/webapp`: lightweight future-facing web placeholder.
-- `apps/mobileapp`: lightweight mobile placeholder.
-- `packages/shared-types`: common type aliases and utility contracts.
-- `packages/domain`: domain models and seeded placeholder records.
-- `packages/api-contracts`: UI-to-runtime command and event contracts.
-- `packages/runtime-contracts`: Tool Host and runtime service contracts.
-- `packages/policy`: deterministic deny-by-default policy helpers.
-- `packages/provider-config`: provider catalog and defaults.
-- `packages/privacy`: privacy defaults and audit redaction rules.
-- `packages/secrets`: placeholder secret-detection descriptors and redaction helpers.
-- `packages/validation`: small runtime validation helpers.
-- `packages/ui`: shared navigation and tenra Guardrail product copy.
-- `packages/config`: scaffold-level configuration defaults.
-- `scripts`: bootstrap, health, dev, and verification entrypoints.
-- `docs`: repo map, developer guide, and stability checklist.
+packages/
+  runtime-contracts/ Tool Host and runtime service contracts
+  policy/            Deny-by-default policy helpers
+  provider-config/   Provider catalog and defaults
+  secrets/           Secret-detection descriptors and redaction helpers
+  privacy/           Privacy defaults and audit redaction rules
+  api-contracts/     UI-to-runtime command and event contracts
+  domain/            Product models and seeded records
+  validation/        Runtime validation helpers
+  ui/                Shared navigation and product copy
+```
 
-## Why desktop-first and local-first
+## Current State
 
-tenra Guardrail’s initial job is to constrain what an agent can see and do on a local machine. That pushes the product toward a desktop wrapper with a Rust runtime rather than a browser-first or cloud-first control plane. The local machine is where filesystem, process, approval, and secrets boundaries must be enforced.
+- The desktop app is the only active product surface.
+- Web and mobile apps are placeholders for future activation.
+- Runtime, policy, provider, privacy, and validation packages define the v0 spine.
+- The local runtime diagnostics and JSON snapshot export support review work.
 
-Web and mobile surfaces may exist later, but they are intentionally inactive in v0 because the policy and Tool Host spine matters more than multi-surface breadth.
+## Deployment Posture
 
-## Bootstrap
+Guardrail is a local desktop product scaffold. It should not be positioned as a complete agent-safety platform until real Tool Host enforcement, approval UX, audit storage, provider handling, and OS-level boundaries have been validated.
 
-1. Copy `.env.example` to `.env` if local overrides are needed.
-2. Run `pnpm bootstrap`.
-3. Run `pnpm doctor` for a quick repo health check.
+## Working Locally
 
-## Daily commands
+```bash
+pnpm run bootstrap
+pnpm run dev:desktop
+pnpm run launch:desktop
+pnpm run verify:all
+pnpm run doctor
+```
 
-- `pnpm dev:desktop`: run the primary Tauri desktop app.
-- `pnpm launch:desktop`: open the installed macOS desktop app without rebuilding.
-- `pnpm dev:web`: run the future web placeholder.
-- `pnpm dev:mobile`: run the mobile placeholder notice.
-- `pnpm verify:all`: run lint, typecheck, and app verification flows.
+## Direction
 
-## Active vs placeholder surfaces
+- Harden the Tool Host boundary and runtime command model.
+- Add approvals and audit persistence before expanding tool coverage.
+- Keep provider configuration explicit and local-first.
+- Activate web or mobile surfaces only when they support the runtime model.
 
-- Active now: `apps/desktopapp`.
-- Placeholder only: `apps/webapp`, `apps/mobileapp`.
+## Related Documentation
 
-The placeholder apps exist so future activation has a stable home, not because tenra Guardrail is trying to be everything on day one.
+- [Local Service Boundary](docs/LOCAL_SERVICE_BOUNDARY.md)
+- [Developer Guide](docs/DEVELOPER_GUIDE.md)
+- [Repo Map](docs/REPO_MAP.md)
+- [Stability Checklist](docs/STABILITY_CHECKLIST.md)
